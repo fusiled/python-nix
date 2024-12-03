@@ -25,6 +25,10 @@ def make_ffi(name, headers, libraries, includes=[], extra_header=""):
     # Define C declarations
     ffi.cdef(header_content)
 
+    ffi.cdef("""
+        extern "Python" void iter_callback(void*, char*, char*);
+    """)
+
     # Set the C source file
     ffi.set_source(name, '''
     #include "nix_api_util.h"
