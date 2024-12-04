@@ -298,6 +298,8 @@ class Value:
         return Value(self._state, value_ptr)
 
     def get_attr_byname(self, name: str) -> Value:
+        if not isinstance(name, str):
+            raise TypeError("key should be a string")
         value_ptr = lib.nix_get_attr_byname(self._value, self._state, name.encode())
         return Value(self._state, value_ptr)
 
@@ -372,8 +374,6 @@ class Value:
     def __getitem__(self, i: int | str) -> Value:
         match self.force_type({Type.attrs, Type.list}):
             case Type.attrs:
-                if not isinstance(i, str):
-                    raise TypeError("key should be a string")
                 return self.get_attr_byname(i)
             case Type.list:
                 if not isinstance(i, int):
@@ -381,6 +381,13 @@ class Value:
                 if i >= len(self):
                     raise IndexError("list index out of range")
                 return self.get_list_byidx(i % len(self))
+            case _:
+                raise RuntimeError
+
+    def __getattr__(self, item: str) -> Value:
+        match self.force_type({Type.attrs, Type.list}):
+            case Type.attrs:
+                return self.get_attr_byname(item)
             case _:
                 raise RuntimeError
 
