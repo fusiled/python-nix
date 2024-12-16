@@ -1,11 +1,13 @@
 import nix
-pkgs = nix.eval("import <nixpkgs> { overlays = []; }")
+pkgs = nix.getenv().nimport(nix.lookup_path("<nixpkgs>"))({'overlays': []})
 
-hello = pkgs["hello"]
+hello = pkgs.hello
 print(repr(hello))
 
-hello2 = pkgs["hello"]['overrideAttrs'](lambda o: {
-    "pname": str(o["pname"]) + "-test"
+hello2 = pkgs.hello.overrideAttrs(lambda o: {
+    "pname": str(o.pname) + "-test",
+    "versionCheckPhase": 'echo all good',
+    "nativeInstallCheckInputs": []
 })
 print(repr(hello2))
 print(hello2.build())
