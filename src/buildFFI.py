@@ -27,6 +27,7 @@ def make_ffi(name, headers, libraries, includes=[], extra_header=""):
 
     ffi.cdef("""
         extern "Python" void iter_callback(void*, char*, char*);
+        const char *nix_get_string_py(struct nix_c_context *, const struct Value *);
     """)
 
     # Set the C source file
@@ -36,6 +37,21 @@ def make_ffi(name, headers, libraries, includes=[], extra_header=""):
     #include "nix_api_expr.h"
     #include "nix_api_value.h"
     #include "nix_api_external.h"
+    
+    static void ffi_get_string_callback(const char * start, unsigned int n, void *user_data);
+    static const char *nix_get_string_py(nix_c_context * context, const Value * value);
+    
+    void ffi_get_string_callback(const char * start, unsigned int n, void *user_data) {
+       char ** str_out = (char **)user_data;
+       *str_out = strndup(start, n);
+    }
+    
+    const char *nix_get_string_py(nix_c_context * context, const Value * value) {
+            char *ptr;
+            nix_get_string(context, value, ffi_get_string_callback, &ptr);
+            return ptr;
+    }
+    
     ''',
                    libraries=parsed["libraries"],
                    library_dirs=parsed["library_dirs"],
@@ -45,7 +61,7 @@ def make_ffi(name, headers, libraries, includes=[], extra_header=""):
 libutil = make_ffi("nix._nix_api_util", ["nix_api_util.h"], ["nixutilc"])
 libstore = make_ffi("nix._nix_api_store", ["nix_api_store.h"], ["nixstorec"], [libutil])
 libexpr = make_ffi("nix._nix_api_expr", ["nix_api_expr.h", "nix_api_value.h", "nix_api_external.h"], ["nixexprc"], [libutil, libstore], """
-extern "Python" void py_nix_primop_base(void*, struct nix_c_context*, struct State*, void**, void*);
+extern "Python" void py_nix_primop_base(void*, struct nix_c_context*, struct EvalState*, void**, void*);
 extern "Python" void py_nix_finalizer(void*, void*);
 extern "Python" void py_nix_external_print(void*, nix_printer*);
 extern "Python" void py_nix_external_toString(void*, nix_string_return*);

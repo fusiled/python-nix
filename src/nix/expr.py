@@ -161,7 +161,12 @@ class PrimOp(ReferenceGC):
     def __init__(self, cb: Callable[..., Evaluated | Value]) -> None:
         ffi.init_once(lib.nix_libexpr_init, "init_libexpr")
 
-        args, varargs, varkw, defaults = inspect.getargspec(cb)
+        print(inspect.signature(cb))
+        fullargs = inspect.getfullargspec(cb)
+        args = fullargs.args
+        varargs = fullargs.varargs
+        varkw = fullargs.varkw
+        defaults = fullargs.defaults
         if varargs is not None or varkw is not None or defaults is not None:
             raise TypeError("only simple methods can be primops now")
         arity = len(args)
@@ -238,7 +243,7 @@ class Value:
             case Type.bool:
                 return bool(lib.nix_get_bool(self._value))
             case Type.string:
-                return ffi.string(lib.nix_get_string(self._value)).decode()
+                return ffi.string(lib.nix_get_string_py(self._value)).decode()
             case Type.attrs:
                 res_dict: dict[str, Value | DeepEvaluated] = {}
                 if deep:
@@ -427,25 +432,26 @@ class Value:
         elif isinstance(py_val, Value):
             lib.nix_copy_value(self._value, py_val._value)
         elif isinstance(py_val, bool):
-            lib.nix_set_bool(self._value, py_val)
+            lib.nix_init_bool(self._value, py_val)
         elif isinstance(py_val, str):
-            lib.nix_set_string(self._value, py_val.encode())
+            lib.nix_init_string(self._value, py_val.encode())
         elif isinstance(py_val, float):
-            lib.nix_set_double(self._value, py_val)
+            lib.nix_init_double(self._value, py_val)
         elif isinstance(py_val, int):
-            lib.nix_set_int(self._value, py_val)
+            lib.nix_init_int(self._value, py_val)
         elif isinstance(py_val, PurePath):
-            lib.nix_set_path_string(self._value, str(py_val).encode())
+            lib.nix_init_path_string(self._value, str(py_val).encode())
         elif py_val is None:
-            lib.nix_set_null(self._value)
+            lib.nix_init_null(self._value)
         elif isinstance(py_val, ExternalValue):
-            lib.nix_set_external(self._value, py_val._ref)
+            lib.nix_init_external(self._value, py_val._ref)
         elif isinstance(py_val, list):
-            lib.nix_make_list(self._state, self._value, len(py_val))
+            builder = lib.nix_make_list_builder(self._state, len(py_val))
             for i in range(len(py_val)):
                 v = Value(self._state)
                 v.set(py_val[i])
-                lib.nix_set_list_byidx(self._value, i, v._value)
+                lib.nix_list_builder_insert(builder, i, v._value)
+            lib.nix_make_list(builder, self._value)
         elif isinstance(py_val, dict):
             bb = ffi.gc(
                 lib.nix_make_bindings_builder(self._state, len(py_val)),
@@ -459,7 +465,7 @@ class Value:
         elif callable(py_val):
             # primops will give us a dispatcher, need to call it
             p = PrimOp(py_val)
-            lib.nix_set_primop(self._value, p._primop)
+            lib.nix_init_primop(self._value, p._primop)
             p.unref()
         else:
             raise TypeError("tried to convert unknown type to nix")
