@@ -1,7 +1,7 @@
 {
   description = "Python-Nix interop";
   inputs = {
-    nix.url = "github:tweag/nix/nix-c-bindings";
+    nix.url = "github:NixOS/nix/2.22.0";
     nixpkgs.follows = "nix/nixpkgs";
   };
   outputs = { self, nix, nixpkgs, flake-utils, ... }@inputs:

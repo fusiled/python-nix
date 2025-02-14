@@ -37,7 +37,7 @@ class Store:
                 pm.append(ffi.new("char*[]", kv))
             pm.append(ffi.NULL)
             params_c = ffi.new("char**[]", pm)
-        self._store = ffi.gc(lib.nix_store_open(url_c, params_c), lib.nix_store_unref)
+        self._store = ffi.gc(lib.nix_store_open(url_c, params_c), lib.nix_store_free)
 
     def get_uri(self) -> str:
         """ Get the URI of the Nix store """
@@ -80,10 +80,9 @@ class Store:
         path = self._ensure_store_path(path)
         res = {}
 
-        # todo extern "Python"
-        @ffi.callback("void(void*, char*, char*)")
+        @ffi.def_extern()
         def iter_callback(userdata: CData, key: CData, path: CData) -> None:
             res[ffi.string(key).decode()] = ffi.string(path).decode()
 
-        lib.nix_store_build(self._store, path._path, ffi.NULL, iter_callback)
+        lib.nix_store_realise(self._store, path._path, ffi.NULL, lib_unwrapped.iter_callback)
         return res

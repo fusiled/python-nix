@@ -32,14 +32,14 @@ class Context:
         return ffi.string(value).decode("utf-8", errors="replace")
 
     def nix_err_info_msg(self) -> str:
-        value = ffi.new("char[1024]")
+        value = ffi.new("char[16384]")
         with Ctx() as ctx:
             ctx.check(lib.nix_err_info_msg, self._ctx, value, len(value))
         return ffi.string(value).decode()
 
     def check(
         self,
-        fn: Callable[Concatenate[ffi.CData, P], R],
+        fn: Callable[[Concatenate[ffi.CData, P]], R],
         *rest: P.args,
         **kwrest: P.kwargs,
     ) -> R:
