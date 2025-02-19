@@ -11,6 +11,8 @@ hello2 = pkgs.hello.overrideAttrs(lambda o: {
 })
 print(repr(hello2))
 print(hello2.build())
+z2n = nix.getenv().getFlake("github:DeterminateSystems/zero-to-nix")
+print(z2n.outputs.apps["x86_64-darwin"].default.type)
 
 class Hello:
     def __init__(self):

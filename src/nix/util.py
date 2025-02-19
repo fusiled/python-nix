@@ -26,16 +26,14 @@ class Context:
         return typing.cast(int, ffi.cast("nix_err*", self._ctx)[0])
 
     def nix_err_name(self) -> str:
-        value = ffi.new("char[128]")
         with Ctx() as ctx:
-            ctx.check(lib.nix_err_name, self._ctx, value, len(value))
-        return ffi.string(value).decode("utf-8", errors="replace")
+            value = ctx.check(lib.nix_err_name_py, self._ctx)
+            return ffi.string(value).decode("utf-8", errors="replace")
 
     def nix_err_info_msg(self) -> str:
-        value = ffi.new("char[16384]")
         with Ctx() as ctx:
-            ctx.check(lib.nix_err_info_msg, self._ctx, value, len(value))
-        return ffi.string(value).decode()
+            value = ctx.check(lib.nix_err_info_msg_py, self._ctx)
+            return ffi.string(value).decode()
 
     def check(
         self,

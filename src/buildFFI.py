@@ -28,6 +28,8 @@ def make_ffi(name, headers, libraries, includes=[], extra_header=""):
     ffi.cdef("""
         extern "Python" void iter_callback(void*, char*, char*);
         const char *nix_get_string_py(struct nix_c_context *, const struct Value *);
+        const char *nix_err_name_py(struct nix_c_context *, const struct nix_c_context *);
+        const char *nix_err_info_msg_py(struct nix_c_context *, const struct nix_c_context *);
     """)
 
     # Set the C source file
@@ -40,6 +42,8 @@ def make_ffi(name, headers, libraries, includes=[], extra_header=""):
     
     static void ffi_get_string_callback(const char * start, unsigned int n, void *user_data);
     static const char *nix_get_string_py(nix_c_context * context, const Value * value);
+    static const char *nix_err_name_py(nix_c_context * context, const nix_c_context * read_context);
+    static const char *nix_err_info_msg_py(struct nix_c_context * context, const struct nix_c_context * read_context);
     
     void ffi_get_string_callback(const char * start, unsigned int n, void *user_data) {
        char ** str_out = (char **)user_data;
@@ -50,6 +54,18 @@ def make_ffi(name, headers, libraries, includes=[], extra_header=""):
             char *ptr;
             nix_get_string(context, value, ffi_get_string_callback, &ptr);
             return ptr;
+    }
+    
+    const char *nix_err_name_py(nix_c_context * context, const nix_c_context * read_context) {
+        char *ptr;
+        nix_err_name(context, read_context, ffi_get_string_callback, &ptr);
+        return ptr;
+    }
+    
+    const char *nix_err_info_msg_py(nix_c_context * context, const nix_c_context * read_context) {
+        char *ptr;
+        nix_err_info_msg(context, read_context, ffi_get_string_callback, &ptr);
+        return ptr;
     }
     
     ''',
