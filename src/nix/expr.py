@@ -436,7 +436,7 @@ class Value:
         elif isinstance(py_val, str):
             lib.nix_init_string(self._value, py_val.encode())
         elif isinstance(py_val, float):
-            lib.nix_init_double(self._value, py_val)
+            lib.nix_init_float(self._value, py_val)
         elif isinstance(py_val, int):
             lib.nix_init_int(self._value, py_val)
         elif isinstance(py_val, PurePath):
