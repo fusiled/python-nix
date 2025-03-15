@@ -14,6 +14,44 @@ $ python
 <Nix: 2>
 ```
 
+## Example
+
+```python
+import nix
+
+# Load the nixpkgs repository
+pkgs = nix.getenv().nimport(nix.lookup_path("<nixpkgs>"))({})
+
+# Get the hello package and override its name
+hello2 = pkgs.hello.overrideAttrs(lambda o: {
+  "pname": str(o.pname) + "-test"
+})
+
+# Build the package
+hello2.build()
+```
+
+
+
+## Development
+
+### Using Nix
+
+A development environment is available in the provided Nix flake.
+Once in the development environment, run `buildFFI.py` to test your changes.
+
+```shell
+$ nix develop .#
+$ cd src
+$ python buildFFI.py
+$ python
+>>> import nix
+```
+
+### Unit-testing
+
+From the project root folder run `python -m unittest`
+
 ## Add to your project
 
 Because this package uses CFFI, it requires a bit more setup than a typical Python package.
@@ -34,36 +72,4 @@ You can install using pip:
 
 ```shell
 $ pip install git+https://github.com/fusiled/python-nix.git
-```
-
-## Example
-
-```python
-import nix
-
-# Load the nixpkgs repository
-pkgs = nix.getenv().nimport(nix.lookup_path("<nixpkgs>"))({})
-
-# Get the hello package and override its name
-hello2 = pkgs.hello.overrideAttrs(lambda o: {
-  "pname": str(o.pname) + "-test"
-})
-
-# Build the package
-hello2.build()
-```
-
-## Development
-
-### Using Nix
-
-A development environment is available in the provided Nix flake.
-Once in the development environment, run `buildFFI.py` to test your changes.
-
-```shell
-$ nix develop .#
-$ cd src
-$ python buildFFI.py
-$ python
->>> import nix
 ```
