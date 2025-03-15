@@ -2,12 +2,12 @@
 
 Maintainer status: maintained, experimental.
 
-Compatibility: Requires https://github.com/NixOS/nix/pull/8699
+Compatibility: Requires Nix 2.22
 
 ## Try in a REPL!
 
 ```shell
-$ nix develop tweag/python-nix#env
+$ nix develop fusiled/python-nix#env
 $ python
 >>> import nix
 >>> nix.eval("1+1")
@@ -22,18 +22,18 @@ To install this package, you will need:
 * gcc
 * pkg-config
 
-and a specific branch of Nix from https://github.com/NixOS/nix/pull/8699 that can be caught by pkg-config.
+and Nix 2.22 that can be caught by pkg-config.
 
 You can build it and give it to pkg-config by running:
 
 ```shell
-$ export PKG_CONFIG_PATH="$(nix build github:tweag/nix/nix-c-bindings#default.dev --no-link --print-out-paths)/lib/pkgconfig"
+$ export PKG_CONFIG_PATH="$(nix build github:fusiled/python-nix#default.dev --no-link --print-out-paths)/lib/pkgconfig"
 ```
 
 You can install using pip:
 
 ```shell
-$ pip install git+https://github.com/tweag/python-nix.git
+$ pip install git+https://github.com/fusiled/python-nix.git
 ```
 
 ## Example
@@ -42,11 +42,11 @@ $ pip install git+https://github.com/tweag/python-nix.git
 import nix
 
 # Load the nixpkgs repository
-pkgs = nix.eval("import nixpkgs")({})
+pkgs = nix.getenv().nimport(nix.lookup_path("<nixpkgs>"))({})
 
 # Get the hello package and override its name
-hello2 = pkgs["hello"]["overrideAttrs"](lambda o: {
-  "pname": str(o["pname"]) + "-test"
+hello2 = pkgs.hello.overrideAttrs(lambda o: {
+  "pname": str(o.pname) + "-test"
 })
 
 # Build the package
